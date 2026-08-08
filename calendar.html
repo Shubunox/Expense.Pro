@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ExpensePro — Calendar</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  .panel{ border-radius:18px; padding:22px; background:var(--glass-fill); border:1px solid var(--glass-border); }
+</style>
+</head>
+<body class="app">
+  <canvas id="aurora-canvas"></canvas>
+  <div class="noise"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <aside id="sidebar" class="glass"></aside>
+
+  <main id="main">
+    <div id="topbar"></div>
+
+    <div class="panel fade-in">
+      <div class="cal-head">
+        <span class="cal-month" id="cal-month">August 2026</span>
+        <div class="cal-nav">
+          <button class="icon-btn" id="cal-prev"><svg class="icon" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <button class="icon-btn" id="cal-next"><svg class="icon" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+        </div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </main>
+
+<script src="assets/js/base.js"></script>
+<script>
+(function(){
+  EP_renderShell('calendar', 'Calendar', 'Bills, income, and goals on a timeline.');
+
+  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var current = new Date(2026,7,1); // August 2026
+  var today = new Date(2026,7,7);
+
+  var events = {
+    3:[{label:'Netflix', color:'#7c6fff'}],
+    5:[{label:'Rent due', color:'#fb7185'}],
+    7:[{label:'Spotify', color:'#2dd4bf'}],
+    12:[{label:'Salary in', color:'#34d399'}],
+    18:[{label:'Electricity', color:'#fbbf24'}],
+    22:[{label:'iCloud+', color:'#7c6fff'}],
+    28:[{label:'Car insurance', color:'#ff8a65'}]
+  };
+
+  function render(){
+    document.getElementById('cal-month').textContent = monthNames[current.getMonth()] + ' ' + current.getFullYear();
+    var grid = document.getElementById('cal-grid');
+    var dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var html = dow.map(function(d){ return '<div class="cal-dow">'+d+'</div>'; }).join('');
+
+    var firstDay = new Date(current.getFullYear(), current.getMonth(), 1).getDay();
+    var daysInMonth = new Date(current.getFullYear(), current.getMonth()+1, 0).getDate();
+
+    for(var i=0;i<firstDay;i++){ html += '<div class="cal-cell empty"></div>'; }
+    for(var d=1; d<=daysInMonth; d++){
+      var isToday = current.getFullYear()===today.getFullYear() && current.getMonth()===today.getMonth() && d===today.getDate();
+      var evs = events[d] || [];
+      html += '<div class="cal-cell'+(isToday?' today':'')+'"><div class="dnum mono">'+d+'</div>'
+        + evs.map(function(e){ return '<div class="cal-event"><span class="d" style="background:'+e.color+'"></span>'+e.label+'</div>'; }).join('')
+        + '</div>';
+    }
+    grid.innerHTML = html;
+  }
+  render();
+
+  document.getElementById('cal-prev').addEventListener('click', function(){ current.setMonth(current.getMonth()-1); render(); window.EP_bindCursorHover(document); });
+  document.getElementById('cal-next').addEventListener('click', function(){ current.setMonth(current.getMonth()+1); render(); window.EP_bindCursorHover(document); });
+
+  window.EP_bindCursorHover(document);
+})();
+</script>
+</body>
+</html>

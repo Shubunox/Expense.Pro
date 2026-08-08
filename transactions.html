@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ExpensePro — Transactions</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  .merchant-search{ display:flex; align-items:center; gap:9px; padding:11px 15px; border-radius:12px; background:var(--glass-fill); border:1px solid var(--glass-border); max-width:340px; margin-bottom:20px; }
+  .merchant-search input{ background:none; border:none; outline:none; font-size:13px; color:var(--text-primary); flex:1; }
+  .merchant-search svg{ width:15px; height:15px; stroke:var(--text-tertiary); }
+  .panel{ border-radius:18px; padding:8px 22px 18px; background:var(--glass-fill); border:1px solid var(--glass-border); overflow-x:auto; }
+  .amt-neg{ color:var(--text-primary); }
+  .amt-pos{ color:var(--success); }
+</style>
+</head>
+<body class="app">
+  <canvas id="aurora-canvas"></canvas>
+  <div class="noise"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <aside id="sidebar" class="glass"></aside>
+
+  <main id="main">
+    <div id="topbar"></div>
+
+    <div class="pill-row" id="cat-pills"></div>
+    <div class="merchant-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input placeholder="Search merchant…">
+    </div>
+
+    <div class="panel fade-in">
+      <table class="data-table">
+        <thead><tr><th>Merchant</th><th>Category</th><th>Date</th><th>Method</th><th>Status</th><th style="text-align:right;">Amount</th></tr></thead>
+        <tbody id="tx-rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+<script src="assets/js/base.js"></script>
+<script>
+(function(){
+  EP_renderShell('transactions', 'Transactions', 'Every dollar, searchable and sorted.');
+
+  var cats = ['All','Food','Shopping','Transport','Bills','Entertainment','Health','Income','Rent','Groceries','Subscriptions','Travel','Education'];
+  document.getElementById('cat-pills').innerHTML = cats.map(function(c,i){ return '<button class="pill'+(i===0?' active':'')+'">'+c+'</button>'; }).join('');
+  document.getElementById('cat-pills').addEventListener('click', function(e){
+    var b = e.target.closest('.pill'); if(!b) return;
+    document.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('active'); });
+    b.classList.add('active');
+  });
+
+  var txs = [
+    {icon:'🚗', name:'Uber', cat:'Transport', date:'17 Aug 2026', method:'UPI', status:'pending', amt:-18.40},
+    {icon:'🎬', name:'AMC Theatres', cat:'Entertainment', date:'16 Aug 2026', method:'Net Banking', status:'completed', amt:-29.99},
+    {icon:'💊', name:'Walgreens Pharmacy', cat:'Health', date:'15 Aug 2026', method:'Credit Card', status:'completed', amt:-42.10},
+    {icon:'🛒', name:'Whole Foods Market', cat:'Groceries', date:'14 Aug 2026', method:'Credit Card', status:'completed', amt:-84.20},
+    {icon:'🚕', name:'Lyft', cat:'Transport', date:'14 Aug 2026', method:'Credit Card', status:'completed', amt:-22.30},
+    {icon:'👜', name:'Nordstrom', cat:'Shopping', date:'12 Aug 2026', method:'Debit Card', status:'completed', amt:-118.40},
+    {icon:'🍽️', name:'Truffles Bistro', cat:'Food', date:'10 Aug 2026', method:'Credit Card', status:'completed', amt:-64.28},
+    {icon:'☁️', name:'iCloud+', cat:'Subscriptions', date:'09 Aug 2026', method:'Debit Card', status:'pending', amt:-9.99},
+    {icon:'✈️', name:'Delta Airlines', cat:'Travel', date:'09 Aug 2026', method:'Debit Card', status:'pending', amt:-214.00},
+    {icon:'🏨', name:'Marriott Hotels', cat:'Travel', date:'08 Aug 2026', method:'Debit Card', status:'completed', amt:-312.00},
+    {icon:'⚡', name:'ConEdison Electric', cat:'Bills', date:'07 Aug 2026', method:'Credit Card', status:'completed', amt:-96.40},
+    {icon:'💼', name:'Salary deposit', cat:'Income', date:'01 Aug 2026', method:'Direct Deposit', status:'completed', amt:4200.00}
+  ];
+  var badgeMap = {completed:'badge-success', pending:'badge-warning'};
+  document.getElementById('tx-rows').innerHTML = txs.map(function(t){
+    var pos = t.amt > 0;
+    return '<tr><td><div class="row-entity"><span class="entity-icon">'+t.icon+'</span><span style="font-weight:600;">'+t.name+'</span></div></td>'
+      + '<td>'+t.cat+'</td><td class="mono" style="color:var(--text-secondary);">'+t.date+'</td><td>'+t.method+'</td>'
+      + '<td><span class="badge '+badgeMap[t.status]+'">'+t.status[0].toUpperCase()+t.status.slice(1)+'</span></td>'
+      + '<td style="text-align:right;" class="mono '+(pos?'amt-pos':'amt-neg')+'">'+(pos?'+':'-')+'$'+Math.abs(t.amt).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
+  }).join('');
+
+  window.EP_bindCursorHover(document);
+})();
+</script>
+</body>
+</html>

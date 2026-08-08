@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ExpensePro — Owner Panel</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  body{ display:flex; }
+  .noise{ opacity:0.02; }
+
+  #sidebar{
+    width:var(--sidebar-w); flex-shrink:0; height:100vh; position:sticky; top:0; z-index:50;
+    display:flex; flex-direction:column; padding:22px 16px; border-right:1px solid var(--glass-border);
+  }
+  .side-brand{ display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:800; font-size:15px; padding:0 8px 6px; }
+  .side-brand .brand-mark{ width:20px; height:20px; border-radius:6px; background:linear-gradient(135deg,var(--coral),var(--danger)); }
+  .owner-tag{ font-size:10.5px; color:var(--text-tertiary); padding:0 8px 22px; }
+
+  .side-section{ font-size:10.5px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.08em; padding:14px 10px 8px; }
+  .side-link{ display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:10px; font-size:13.5px; color:var(--text-secondary); transition:background .2s, color .2s; margin-bottom:2px; }
+  .side-link svg{ width:16px; height:16px; stroke-width:1.8; }
+  .side-link:hover{ background:var(--glass-fill); color:var(--text-primary); }
+  .side-link.active{ background:var(--glass-fill-strong); color:var(--text-primary); border:1px solid var(--glass-border); }
+  .side-bottom{ margin-top:auto; }
+  .side-user{ display:flex; align-items:center; gap:10px; padding:10px; border-radius:12px; background:var(--glass-fill); border:1px solid var(--glass-border); }
+  .avatar{ width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--coral),var(--danger)); flex-shrink:0; }
+  .side-user .name{ font-size:13px; font-weight:600; }
+  .side-user .plan{ font-size:11px; color:var(--text-tertiary); }
+
+  #main{ flex:1; min-width:0; position:relative; z-index:2; padding:22px 30px 60px; }
+  #topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:26px; gap:20px; }
+  .page-title{ font-family:var(--font-display); font-weight:800; font-size:22px; letter-spacing:-0.015em; }
+  .page-sub{ font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+
+  .status-pill{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-secondary); padding:8px 14px; border-radius:100px; background:var(--glass-fill); border:1px solid var(--glass-border); }
+  .status-dot{ width:7px; height:7px; border-radius:50%; background:var(--success); box-shadow:0 0 8px var(--success); }
+
+  .kpi-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:18px; }
+  .kpi-card{ border-radius:16px; padding:18px; background:var(--glass-fill); border:1px solid var(--glass-border); }
+  .kpi-label{ font-size:11.5px; color:var(--text-secondary); }
+  .kpi-value{ font-family:var(--font-mono); font-size:21px; font-weight:600; margin-top:8px; }
+  .kpi-delta{ font-size:11px; margin-top:6px; }
+
+  .grid-2{ display:grid; grid-template-columns:1.5fr 1fr; gap:16px; margin-bottom:16px; }
+  .panel{ border-radius:18px; padding:22px; background:var(--glass-fill); border:1px solid var(--glass-border); }
+  .panel-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .panel-title{ font-family:var(--font-display); font-weight:700; font-size:15px; }
+  #growth-canvas{ width:100%; height:200px; }
+
+  /* activity feed */
+  .feed-item{ display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--glass-border); }
+  .feed-item:last-child{ border-bottom:none; }
+  .feed-dot{ width:7px; height:7px; border-radius:50%; margin-top:6px; flex-shrink:0; }
+  .feed-text{ font-size:12.5px; color:var(--text-secondary); line-height:1.5; }
+  .feed-text b{ color:var(--text-primary); font-weight:600; }
+  .feed-time{ font-size:10.5px; color:var(--text-tertiary); margin-top:2px; }
+
+  /* users table */
+  .table-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:14px; flex-wrap:wrap; }
+  .search-box{ display:flex; align-items:center; gap:9px; padding:9px 13px; border-radius:11px; background:var(--glass-fill); border:1px solid var(--glass-border); min-width:240px; }
+  .search-box input{ background:none; border:none; outline:none; font-size:13px; color:var(--text-primary); flex:1; }
+  .search-box svg{ width:14px; height:14px; stroke:var(--text-tertiary); }
+  .filter-chips{ display:flex; gap:8px; }
+  .chip{ font-size:11.5px; padding:7px 13px; border-radius:100px; background:var(--glass-fill); border:1px solid var(--glass-border); color:var(--text-secondary); }
+  .chip.active{ background:var(--text-primary); color:#0a0b12; }
+
+  table{ width:100%; border-collapse:collapse; }
+  thead th{ text-align:left; font-size:11px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.05em; padding:0 12px 12px; font-weight:600; }
+  tbody tr{ transition:background .2s; }
+  tbody tr:hover{ background:var(--glass-fill-strong); }
+  tbody td{ padding:13px 12px; font-size:13px; border-top:1px solid var(--glass-border); }
+  .u-cell{ display:flex; align-items:center; gap:10px; }
+  .u-avatar{ width:30px; height:30px; border-radius:50%; flex-shrink:0; }
+  .u-name{ font-weight:600; font-size:12.5px; }
+  .u-email{ font-size:11.5px; color:var(--text-tertiary); }
+  .row-actions{ display:flex; gap:6px; justify-content:flex-end; }
+  .row-actions button{ width:28px; height:28px; border-radius:8px; background:var(--glass-fill); border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:center; }
+  .row-actions button:hover{ background:var(--glass-fill-strong); }
+  .row-actions svg{ width:13px; height:13px; }
+
+  .roles-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .role-card{ border-radius:14px; padding:16px; background:var(--glass-fill-strong); border:1px solid var(--glass-border); }
+  .role-card .rn{ font-family:var(--font-display); font-weight:700; font-size:13.5px; }
+  .role-card .rd{ font-size:11.5px; color:var(--text-tertiary); margin-top:4px; }
+
+  @media (max-width:1100px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } .grid-2{ grid-template-columns:1fr; } .roles-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:800px){
+    #sidebar{ position:fixed; left:0; top:0; transform:translateX(-100%); transition:transform .35s var(--ease-out); background:var(--bg-elevated); }
+    #sidebar.open{ transform:translateX(0); }
+  }
+</style>
+</head>
+<body>
+  <canvas id="aurora-canvas"></canvas>
+  <div class="noise"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <aside id="sidebar" class="glass">
+    <div class="side-brand"><span class="brand-mark"></span>ExpensePro</div>
+    <div class="owner-tag">OWNER PANEL</div>
+
+    <div class="side-section">Overview</div>
+    <a class="side-link active" href="#"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Executive Dashboard</a>
+    <a class="side-link" href="#"><svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 8.5c1.6.2 3 1.4 3 3.3M17.5 20c0-2.6-1.5-4.6-3.8-5.5"/></svg>User Management</a>
+    <a class="side-link" href="#"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/></svg>Financial Control</a>
+    <a class="side-link" href="#"><svg class="icon" viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/></svg>Content</a>
+    <a class="side-link" href="#"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M8 12h8M12 8v8"/></svg>AI Management</a>
+    <a class="side-link" href="#"><svg class="icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>System</a>
+
+    <div class="side-section">Access</div>
+    <a class="side-link" href="dashboard.html"><svg class="icon" viewBox="0 0 24 24"><path d="M10 19l-7-7 7-7M3 12h18"/></svg>Back to app</a>
+
+    <div class="side-bottom">
+      <div class="side-user">
+        <span class="avatar"></span>
+        <div><div class="name">Jordan Lee</div><div class="plan">Owner</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="main">
+    <div id="topbar">
+      <div>
+        <div class="page-title">Executive Dashboard</div>
+        <div class="page-sub">Live snapshot across all users, revenue, and system health</div>
+      </div>
+      <div class="status-pill"><span class="status-dot"></span>All systems operational</div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card fade-in"><div class="kpi-label">Total users</div><div class="kpi-value mono" data-count data-target="48219">0</div><div class="kpi-delta" style="color:var(--success)">↑ 312 this week</div></div>
+      <div class="kpi-card fade-in" style="animation-delay:.05s"><div class="kpi-label">Active users (30d)</div><div class="kpi-value mono" data-count data-target="31904">0</div><div class="kpi-delta" style="color:var(--success)">↑ 4.2%</div></div>
+      <div class="kpi-card fade-in" style="animation-delay:.1s"><div class="kpi-label">MRR</div><div class="kpi-value mono" data-count data-target="184260" data-prefix="$">$0</div><div class="kpi-delta" style="color:var(--success)">↑ 8.6%</div></div>
+      <div class="kpi-card fade-in" style="animation-delay:.15s"><div class="kpi-label">Churn rate</div><div class="kpi-value mono" data-count data-target="2.1" data-suffix="%" data-decimals="1">0%</div><div class="kpi-delta" style="color:var(--danger)">↑ 0.3pp</div></div>
+      <div class="kpi-card fade-in" style="animation-delay:.2s"><div class="kpi-label">AI requests today</div><div class="kpi-value mono" data-count data-target="128430">0</div><div class="kpi-delta" style="color:var(--text-tertiary)">$342 est. cost</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel fade-in">
+        <div class="panel-head"><span class="panel-title">User growth</span></div>
+        <canvas id="growth-canvas"></canvas>
+      </div>
+      <div class="panel fade-in">
+        <div class="panel-head"><span class="panel-title">Live activity</span></div>
+        <div id="feed-list"></div>
+      </div>
+    </div>
+
+    <div class="panel fade-in" style="margin-bottom:16px;">
+      <div class="panel-head"><span class="panel-title">User management</span></div>
+      <div class="table-toolbar">
+        <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input placeholder="Search by name or email…"></div>
+        <div class="filter-chips">
+          <button class="chip active">All</button>
+          <button class="chip">Active</button>
+          <button class="chip">Trial</button>
+          <button class="chip">Suspended</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Joined</th><th>Last login</th><th></th></tr></thead>
+        <tbody id="user-rows"></tbody>
+      </table>
+    </div>
+
+    <div class="panel fade-in">
+      <div class="panel-head"><span class="panel-title">Admin roles</span><span style="font-size:11.5px;color:var(--text-tertiary);">Granular permissions per role</span></div>
+      <div class="roles-grid" id="roles-grid"></div>
+    </div>
+  </main>
+
+<script src="assets/js/base.js"></script>
+<script>
+(function(){
+  document.querySelectorAll('[data-count]').forEach(function(el){
+    var target = parseFloat(el.dataset.target);
+    var prefix = el.dataset.prefix||'';
+    var suffix = el.dataset.suffix||'';
+    var decimals = parseInt(el.dataset.decimals||'0');
+    var t0 = performance.now(), duration=1500;
+    function step(now){
+      var t = Math.min(1,(now-t0)/duration);
+      var eased = 1-Math.pow(1-t,3);
+      var val = target*eased;
+      el.textContent = prefix + val.toLocaleString('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals}) + suffix;
+      if(t<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+
+  /* growth chart */
+  var canvas = document.getElementById('growth-canvas');
+  var ctx = canvas.getContext('2d');
+  var data = [12,15,14,19,22,21,26,30,29,35,40,38,45,52,49,58,64,61,70,78];
+  function draw(){
+    canvas.width = canvas.clientWidth*devicePixelRatio; canvas.height = canvas.clientHeight*devicePixelRatio;
+    var w=canvas.width,h=canvas.height,max=85,n=data.length;
+    ctx.clearRect(0,0,w,h);
+    ctx.beginPath();
+    data.forEach(function(v,i){
+      var x=(i/(n-1))*w, y=h-(v/max)*h*0.85-h*0.05;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+    var grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'rgba(124,111,255,0.25)'); grad.addColorStop(1,'rgba(124,111,255,0)');
+    ctx.fillStyle=grad; ctx.fill();
+    ctx.beginPath();
+    data.forEach(function(v,i){
+      var x=(i/(n-1))*w, y=h-(v/max)*h*0.85-h*0.05;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle='#7c6fff'; ctx.lineWidth=2.4*devicePixelRatio; ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.shadowColor='#7c6fff'; ctx.shadowBlur=12;
+    ctx.stroke();
+  }
+  window.addEventListener('resize', draw);
+  setTimeout(draw,60);
+
+  /* activity feed */
+  var feed = [
+    {c:'var(--success)', t:'<b>New signup</b> — sarah.k@domain.com joined on the Pro plan', time:'2 min ago'},
+    {c:'var(--warning)', t:'<b>Payment retry</b> — subscription #4482 failed, retrying in 24h', time:'11 min ago'},
+    {c:'var(--danger)', t:'<b>Account suspended</b> — flagged for suspicious login pattern', time:'34 min ago'},
+    {c:'var(--violet)', t:'<b>AI usage spike</b> — receipt scanning up 40% in the last hour', time:'52 min ago'},
+    {c:'var(--success)', t:'<b>Upgrade</b> — user #10221 moved from Starter to Family', time:'1h ago'},
+    {c:'var(--text-tertiary)', t:'<b>Backup complete</b> — nightly database snapshot finished', time:'2h ago'}
+  ];
+  document.getElementById('feed-list').innerHTML = feed.map(function(f){
+    return '<div class="feed-item"><span class="feed-dot" style="background:'+f.c+'"></span><div><div class="feed-text">'+f.t+'</div><div class="feed-time">'+f.time+'</div></div></div>';
+  }).join('');
+
+  /* users table */
+  var users = [
+    {name:'Sarah Kim', email:'sarah.k@domain.com', plan:'Pro', status:'active', joined:'Jul 2, 2026', login:'2 min ago'},
+    {name:'David Chen', email:'dchen@mail.com', plan:'Family', status:'active', joined:'May 18, 2026', login:'1h ago'},
+    {name:'Maria Lopez', email:'maria.lopez@work.io', plan:'Starter', status:'trial', joined:'Aug 4, 2026', login:'3h ago'},
+    {name:'James Wright', email:'jwright@corp.com', plan:'Pro', status:'suspended', joined:'Feb 9, 2026', login:'6d ago'},
+    {name:'Aisha Bello', email:'aisha.b@domain.com', plan:'Pro', status:'active', joined:'Jun 27, 2026', login:'19 min ago'},
+    {name:'Tom Becker', email:'tbecker@mail.com', plan:'Starter', status:'active', joined:'Jul 30, 2026', login:'5h ago'}
+  ];
+  var badgeMap = {active:'badge-success', trial:'badge-violet', suspended:'badge-danger'};
+  document.getElementById('user-rows').innerHTML = users.map(function(u){
+    return '<tr><td><div class="u-cell"><span class="u-avatar" style="background:linear-gradient(135deg,var(--violet),var(--teal));border-radius:50%;"></span>'
+      +'<div><div class="u-name">'+u.name+'</div><div class="u-email">'+u.email+'</div></div></div></td>'
+      +'<td>'+u.plan+'</td>'
+      +'<td><span class="badge '+badgeMap[u.status]+'">'+u.status+'</span></td>'
+      +'<td>'+u.joined+'</td><td>'+u.login+'</td>'
+      +'<td><div class="row-actions">'
+        +'<button title="Reset password"><svg class="icon" viewBox="0 0 24 24"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg></button>'
+        +'<button title="Suspend"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M4.9 4.9l14.2 14.2"/></svg></button>'
+        +'<button title="More"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>'
+      +'</div></td></tr>';
+  }).join('');
+
+  /* role cards */
+  var roles = [
+    {n:'Owner', d:'Full unrestricted access to every panel and setting'},
+    {n:'Super Admin', d:'All access except billing ownership transfer'},
+    {n:'Admin', d:'User and content management, no financial controls'},
+    {n:'Support', d:'View-only access plus password resets and impersonation'},
+    {n:'Finance', d:'Revenue, refunds, payouts, and tax reporting only'},
+    {n:'Moderator', d:'Content review and user suspension only'}
+  ];
+  document.getElementById('roles-grid').innerHTML = roles.map(function(r){
+    return '<div class="role-card"><div class="rn">'+r.n+'</div><div class="rd">'+r.d+'</div></div>';
+  }).join('');
+
+  window.EP_bindCursorHover(document);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ExpensePro — Budgets</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  .budget-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .bcard{ border-radius:18px; padding:22px; background:var(--glass-fill); border:1px solid var(--glass-border); }
+  .bcard-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; }
+  .bcard-id{ display:flex; align-items:center; gap:12px; }
+  .bcard-icon{ width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; background:var(--glass-fill-strong); border:1px solid var(--glass-border); font-size:17px; }
+  .bcard-name{ font-family:var(--font-display); font-weight:700; font-size:14.5px; }
+  .bcard-sub{ font-size:11px; color:var(--text-tertiary); margin-top:2px; }
+  .bcard-track{ height:7px; border-radius:6px; background:var(--glass-border); overflow:hidden; margin-bottom:12px; }
+  .bcard-fill{ height:100%; border-radius:6px; }
+  .bcard-foot{ display:flex; justify-content:space-between; font-size:12.5px; }
+  .bcard-foot .sp{ font-family:var(--font-mono); }
+  .bcard-foot .tot{ color:var(--text-tertiary); font-family:var(--font-mono); }
+  .add-card{ border-radius:18px; border:1.5px dashed var(--glass-border-strong); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-height:170px; color:var(--text-secondary); font-size:13px; font-weight:600; transition:border-color .25s, color .25s; }
+  .add-card:hover{ border-color:var(--violet-soft); color:var(--text-primary); }
+  .add-card .plus{ width:38px; height:38px; border-radius:50%; background:var(--glass-fill-strong); border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:center; }
+  @media (max-width:1000px){ .budget-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:640px){ .budget-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body class="app">
+  <canvas id="aurora-canvas"></canvas>
+  <div class="noise"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <aside id="sidebar" class="glass"></aside>
+
+  <main id="main">
+    <div id="topbar"></div>
+
+    <div class="mini-stat-grid">
+      <div class="mini-stat fade-in"><div class="lbl">Total budgeted</div><div class="val mono" id="stat-total">$0</div></div>
+      <div class="mini-stat fade-in" style="animation-delay:.05s"><div class="lbl">Total spent</div><div class="val mono" id="stat-spent">$0</div></div>
+      <div class="mini-stat fade-in" style="animation-delay:.1s"><div class="lbl">Remaining this cycle</div><div class="val mono" id="stat-remaining" style="color:var(--success);">$0</div></div>
+    </div>
+
+    <div class="budget-grid" id="budget-grid"></div>
+  </main>
+
+<script src="assets/js/base.js"></script>
+<script>
+(function(){
+  EP_renderShell('budgets', 'Budgets', 'Category limits for this billing cycle.');
+
+  var budgets = [
+    {icon:'🍽️', name:'Food', spent:412, total:600, color:'#fbbf24'},
+    {icon:'🛍️', name:'Shopping', spent:530, total:450, color:'#fb7185', over:true},
+    {icon:'🚗', name:'Transport', spent:186, total:300, color:'#7c6fff'},
+    {icon:'🛒', name:'Groceries', spent:290, total:400, color:'#4f9cff'},
+    {icon:'🎬', name:'Entertainment', spent:106, total:200, color:'#2dd4bf'},
+    {icon:'⚡', name:'Bills', spent:327, total:380, color:'#fb7185'}
+  ];
+
+  var totalBudgeted = budgets.reduce(function(s,b){return s+b.total;},0);
+  var totalSpent = budgets.reduce(function(s,b){return s+b.spent;},0);
+
+  EP_countTo(document.getElementById('stat-total'), totalBudgeted, {prefix:'$', duration:1000});
+  EP_countTo(document.getElementById('stat-spent'), totalSpent, {prefix:'$', duration:1000});
+  EP_countTo(document.getElementById('stat-remaining'), totalBudgeted-totalSpent, {prefix:'$', duration:1000});
+
+  document.getElementById('budget-grid').innerHTML = budgets.map(function(b){
+    var pct = Math.min(100, Math.round((b.spent/b.total)*100));
+    return '<div class="bcard fade-in"><div class="bcard-head"><div class="bcard-id"><span class="bcard-icon">'+b.icon+'</span>'
+      + '<div><div class="bcard-name">'+b.name+'</div><div class="bcard-sub">Monthly limit</div></div></div>'
+      + '<span class="badge '+(b.over?'badge-danger':'badge-success')+'">'+(b.over?'Over':pct+'%')+'</span></div>'
+      + '<div class="bcard-track"><div class="bcard-fill" style="width:'+Math.min(pct,100)+'%; background:'+b.color+'"></div></div>'
+      + '<div class="bcard-foot"><span class="sp">$'+b.spent.toLocaleString()+' spent</span><span class="tot">of $'+b.total.toLocaleString()+'</span></div></div>';
+  }).join('') + '<div class="add-card fade-in"><span class="plus"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>Add a new budget category</div>';
+
+  window.EP_bindCursorHover(document);
+})();
+</script>
+</body>
+</html>

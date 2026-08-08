@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ExpensePro — Savings Goals</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  .goal-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .gcard{ border-radius:20px; padding:26px; background:var(--glass-fill); border:1px solid var(--glass-border); display:flex; flex-direction:column; }
+  .gcard-top{ display:flex; align-items:center; gap:16px; margin-bottom:22px; }
+  .gcard-ring{ width:64px; height:64px; flex-shrink:0; }
+  .gcard-title{ display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:700; font-size:15.5px; margin-bottom:4px; }
+  .gcard-title .gi{ font-size:16px; }
+  .gcard-amt{ font-family:var(--font-mono); font-size:22px; font-weight:600; }
+  .gcard-amt span{ font-size:13px; color:var(--text-tertiary); font-weight:400; }
+  .gcard-sub{ font-size:12px; color:var(--text-tertiary); margin-top:4px; }
+  .gcard-actions{ display:flex; gap:10px; margin-top:auto; }
+  .gcard-actions .btn{ flex:1; }
+  .add-card{ border-radius:20px; border:1.5px dashed var(--glass-border-strong); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-height:190px; color:var(--text-secondary); font-size:13px; font-weight:600; transition:border-color .25s, color .25s; }
+  .add-card:hover{ border-color:var(--violet-soft); color:var(--text-primary); }
+  .add-card .plus{ width:40px; height:40px; border-radius:50%; background:var(--glass-fill-strong); border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:center; }
+  @media (max-width:800px){ .goal-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body class="app">
+  <canvas id="aurora-canvas"></canvas>
+  <div class="noise"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <aside id="sidebar" class="glass"></aside>
+
+  <main id="main">
+    <div id="topbar"></div>
+
+    <div class="goal-grid" id="goal-grid"></div>
+  </main>
+
+<script src="assets/js/base.js"></script>
+<script>
+(function(){
+  EP_renderShell('goals', 'Savings Goals', 'Track progress toward what matters.');
+
+  var goals = [
+    {icon:'🛡️', name:'Emergency Fund', saved:8200, target:12000, due:'Dec 2026', color:'#2dd4bf'},
+    {icon:'🏝️', name:'Japan Trip', saved:2600, target:5000, due:'Apr 2027', color:'#7c6fff'},
+    {icon:'💻', name:'New Laptop', saved:980, target:2400, due:'Feb 2027', color:'#ff8a65'},
+    {icon:'🏠', name:'House Down Payment', saved:24500, target:80000, due:'2029', color:'#fbbf24'}
+  ];
+
+  function ringSVG(pct,color,size){
+    var r=(size/2)-5,c=2*Math.PI*r,off=c-(pct/100)*c, cx=size/2, cy=size/2;
+    return '<svg class="ring" viewBox="0 0 '+size+' '+size+'"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--glass-border)" stroke-width="5"/>'
+      + '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="5" stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" transform="rotate(-90 '+cx+' '+cy+')"/></svg>';
+  }
+
+  var cards = goals.map(function(g){
+    var pct = Math.round((g.saved/g.target)*100);
+    return '<div class="gcard fade-in"><div class="gcard-top"><span class="gcard-ring">'+ringSVG(pct,g.color,64)+'</span>'
+      + '<div><div class="gcard-title"><span class="gi">'+g.icon+'</span>'+g.name+'</div>'
+      + '<div class="gcard-amt">$'+g.saved.toLocaleString()+' <span>of $'+g.target.toLocaleString()+'</span></div>'
+      + '<div class="gcard-sub">Target: '+g.due+' · '+pct+'% funded</div></div></div>'
+      + '<div class="gcard-actions"><a href="#" class="btn btn-primary">Add funds</a><a href="#" class="btn btn-ghost">Details</a></div></div>';
+  }).join('');
+
+  cards += '<div class="add-card fade-in"><span class="plus"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>Create a new savings goal</div>';
+  document.getElementById('goal-grid').innerHTML = cards;
+
+  window.EP_bindCursorHover(document);
+})();
+</script>
+</body>
+</html>

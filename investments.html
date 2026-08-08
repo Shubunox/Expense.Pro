@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ExpensePro — Investments</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  .panel{ border-radius:18px; padding:22px; background:var(--glass-fill); border:1px solid var(--glass-border); }
+  .panel-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .panel-title{ font-family:var(--font-display); font-weight:700; font-size:15px; display:flex; align-items:center; gap:8px; }
+  .live-dot{ width:7px; height:7px; border-radius:50%; background:var(--success); box-shadow:0 0 8px var(--success); }
+  .market-row{ display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--glass-border); }
+  .market-row:last-child{ border-bottom:none; }
+  .market-name{ font-size:13px; font-weight:600; }
+  .market-sub{ font-size:11px; color:var(--text-tertiary); margin-top:2px; }
+  .market-val{ text-align:right; }
+  .market-price{ font-family:var(--font-mono); font-size:13.5px; }
+  .market-chg{ font-size:11.5px; margin-top:2px; }
+  .disclaimer{ font-size:11px; color:var(--text-tertiary); margin-top:14px; line-height:1.5; }
+  #growth-canvas{ width:100%; height:190px; }
+  #alloc-canvas{ width:120px; height:120px; flex-shrink:0; }
+  .grid-2{ display:grid; grid-template-columns:1.4fr 1fr; gap:16px; margin-bottom:16px; }
+  .alloc-wrap{ display:flex; align-items:center; gap:20px; }
+  .alloc-legend{ display:flex; flex-direction:column; gap:10px; flex:1; }
+  .alloc-item{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; }
+  .alloc-item .l{ display:flex; align-items:center; gap:8px; color:var(--text-secondary); }
+  .alloc-dot{ width:8px; height:8px; border-radius:50%; }
+  @media (max-width:900px){ .grid-2{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body class="app">
+  <canvas id="aurora-canvas"></canvas>
+  <div class="noise"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <aside id="sidebar" class="glass"></aside>
+
+  <main id="main">
+    <div id="topbar"></div>
+
+    <div class="mini-stat-grid">
+      <div class="mini-stat fade-in">
+        <div class="lbl">Portfolio value</div>
+        <div class="val mono" id="stat-value">$0</div>
+        <div class="sub"><span class="badge badge-success" style="margin-top:2px;">↑ 15.0% overall</span></div>
+      </div>
+      <div class="mini-stat fade-in" style="animation-delay:.05s"><div class="lbl">Total invested</div><div class="val mono" id="stat-invested">$0</div></div>
+      <div class="mini-stat fade-in" style="animation-delay:.1s"><div class="lbl">Unrealized gain</div><div class="val mono" id="stat-gain" style="color:var(--success);">$0</div></div>
+    </div>
+
+    <div class="panel fade-in" style="margin-bottom:16px;">
+      <div class="panel-head"><span class="panel-title"><span class="live-dot"></span>Live markets</span></div>
+      <div id="market-list"></div>
+      <div class="disclaimer">Prices shown are a simulated live-ticking demo for illustration — no real exchange feed is wired in.</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel fade-in">
+        <div class="panel-head"><span class="panel-title">Portfolio growth — 6 months</span></div>
+        <canvas id="growth-canvas"></canvas>
+      </div>
+      <div class="panel fade-in">
+        <div class="panel-head"><span class="panel-title">Allocation</span></div>
+        <div class="alloc-wrap">
+          <canvas id="alloc-canvas"></canvas>
+          <div class="alloc-legend" id="alloc-legend"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script src="assets/js/base.js"></script>
+<script>
+(function(){
+  EP_renderShell('investments', 'Investments', 'Your portfolio, blended and current.');
+
+  EP_countTo(document.getElementById('stat-value'), 41270, {prefix:'$', duration:1200});
+  EP_countTo(document.getElementById('stat-invested'), 35900, {prefix:'$', duration:1200});
+  EP_countTo(document.getElementById('stat-gain'), 5370, {prefix:'+$', duration:1200});
+
+  var markets = [
+    {name:'S&P 500', sub:'Index', price:5842.10, chg:0.6},
+    {name:'NASDAQ', sub:'Index', price:19210.40, chg:0.9},
+    {name:'Bitcoin', sub:'BTC / USD', price:0, chg:0},
+    {name:'Apple Inc.', sub:'AAPL', price:228.40, chg:-0.3},
+    {name:'Vanguard S&P 500 ETF', sub:'VOO', price:534.20, chg:0.5}
+  ];
+  var listEl = document.getElementById('market-list');
+  function renderMarkets(){
+    listEl.innerHTML = markets.map(function(m,i){
+      var up = m.chg>=0;
+      return '<div class="market-row" data-i="'+i+'"><div><div class="market-name">'+m.name+'</div><div class="market-sub">'+m.sub+'</div></div>'
+        + '<div class="market-val"><div class="market-price mono">'+(m.price?'$'+m.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</div>'
+        + '<div class="market-chg mono" style="color:'+(up?'var(--success)':'var(--danger)')+'">'+(up?'▲':'▼')+' '+Math.abs(m.chg).toFixed(2)+'%</div></div></div>';
+    }).join('');
+  }
+  // simulated BTC price with a live-ticking random walk (no external calls)
+  var btcPrice = 62400;
+  markets[2].price = btcPrice;
+  renderMarkets();
+  setInterval(function(){
+    markets.forEach(function(m, i){
+      var drift = (Math.random()-0.48) * (i===2 ? 180 : m.price*0.002);
+      m.price = Math.max(1, m.price + drift);
+      m.chg = m.chg + (Math.random()-0.5)*0.15;
+    });
+    renderMarkets();
+  }, 2600);
+
+  /* growth chart */
+  var gc = document.getElementById('growth-canvas');
+  var gctx = gc.getContext('2d');
+  var growth = [30,34,32,38,36,42,40,46,44,50,48,55];
+  function drawGrowth(){
+    gc.width = gc.clientWidth*devicePixelRatio; gc.height = gc.clientHeight*devicePixelRatio;
+    var w=gc.width,h=gc.height,max=60,n=growth.length;
+    gctx.clearRect(0,0,w,h);
+    gctx.beginPath();
+    growth.forEach(function(v,i){ var x=(i/(n-1))*w, y=h-(v/max)*h*0.85-h*0.05; if(i===0) gctx.moveTo(x,y); else gctx.lineTo(x,y); });
+    gctx.lineTo(w,h); gctx.lineTo(0,h); gctx.closePath();
+    var grad = gctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'rgba(45,212,191,0.25)'); grad.addColorStop(1,'rgba(45,212,191,0)');
+    gctx.fillStyle=grad; gctx.fill();
+    gctx.beginPath();
+    growth.forEach(function(v,i){ var x=(i/(n-1))*w, y=h-(v/max)*h*0.85-h*0.05; if(i===0) gctx.moveTo(x,y); else gctx.lineTo(x,y); });
+    gctx.strokeStyle='#2dd4bf'; gctx.lineWidth=2.4*devicePixelRatio; gctx.lineJoin='round'; gctx.lineCap='round';
+    gctx.shadowColor='#2dd4bf'; gctx.shadowBlur=12;
+    gctx.stroke();
+  }
+  window.addEventListener('resize', drawGrowth);
+  setTimeout(drawGrowth,60);
+
+  /* allocation donut */
+  var alloc = [
+    {name:'US Equities', val:44, color:'#7c6fff'},
+    {name:'Index Funds', val:26, color:'#2dd4bf'},
+    {name:'Crypto', val:14, color:'#ff8a65'},
+    {name:'Bonds', val:10, color:'#fbbf24'},
+    {name:'Cash', val:6, color:'#565c70'}
+  ];
+  var ac = document.getElementById('alloc-canvas');
+  var actx = ac.getContext('2d');
+  function drawAlloc(){
+    ac.width = ac.clientWidth*devicePixelRatio; ac.height = ac.clientHeight*devicePixelRatio;
+    var w=ac.width,h=ac.height,cx=w/2,cy=h/2,r=Math.min(w,h)/2-3, rin=r*0.6;
+    var start=-Math.PI/2;
+    actx.clearRect(0,0,w,h);
+    alloc.forEach(function(a){
+      var slice=(a.val/100)*Math.PI*2;
+      actx.beginPath();
+      actx.arc(cx,cy,r,start,start+slice);
+      actx.arc(cx,cy,rin,start+slice,start,true);
+      actx.closePath();
+      actx.fillStyle=a.color; actx.fill();
+      start+=slice;
+    });
+  }
+  drawAlloc();
+  window.addEventListener('resize', drawAlloc);
+  document.getElementById('alloc-legend').innerHTML = alloc.map(function(a){
+    return '<div class="alloc-item"><span class="l"><span class="alloc-dot" style="background:'+a.color+'"></span>'+a.name+'</span><span class="mono">'+a.val+'%</span></div>';
+  }).join('');
+
+  window.EP_bindCursorHover(document);
+})();
+</script>
+</body>
+</html>

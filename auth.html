@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ExpensePro — Sign in</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  body{ display:flex; min-height:100vh; }
+  .noise{ opacity:0.025; }
+
+  .brand-panel{
+    flex:1.05; position:relative; z-index:2; display:flex; flex-direction:column; justify-content:space-between;
+    padding:48px 56px; overflow:hidden;
+    border-right:1px solid var(--glass-border);
+  }
+  .brand-top{ display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:800; font-size:16px; }
+  .brand-mark{ width:22px; height:22px; border-radius:7px; background:linear-gradient(135deg,var(--violet),var(--teal)); }
+
+  .brand-mid{ max-width:420px; margin-top:60px; }
+  .brand-mid h1{ font-family:var(--font-display); font-weight:800; font-size:clamp(28px,3vw,38px); line-height:1.12; letter-spacing:-0.02em; }
+  .brand-mid p{ margin-top:16px; color:var(--text-secondary); font-size:14.5px; line-height:1.65; max-width:38ch; }
+
+  .float-card{
+    margin-top:44px; padding:20px 22px; border-radius:18px; max-width:320px;
+    background:var(--glass-fill); border:1px solid var(--glass-border); backdrop-filter:blur(16px);
+    box-shadow:0 30px 70px rgba(0,0,0,0.4);
+  }
+  .float-card .lbl{ font-size:11px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; }
+  .float-card .val{ font-family:var(--font-mono); font-size:24px; font-weight:600; margin-top:6px; }
+  .float-card .delta{ font-size:12px; color:var(--success); margin-top:6px; }
+
+  .brand-bottom{ font-size:12px; color:var(--text-tertiary); }
+
+  .auth-panel{
+    flex:1; position:relative; z-index:2; display:flex; align-items:center; justify-content:center; padding:40px;
+  }
+  .auth-box{ width:100%; max-width:380px; }
+  .auth-tabs{ display:flex; gap:4px; padding:4px; border-radius:100px; background:var(--glass-fill); border:1px solid var(--glass-border); margin-bottom:30px; }
+  .auth-tab{ flex:1; text-align:center; padding:10px; border-radius:100px; font-size:13px; font-weight:600; color:var(--text-secondary); transition:all .3s var(--ease-out); }
+  .auth-tab.active{ background:var(--text-primary); color:#0a0b12; }
+
+  .auth-title{ font-family:var(--font-display); font-weight:800; font-size:24px; letter-spacing:-0.015em; margin-bottom:6px; }
+  .auth-sub{ font-size:13px; color:var(--text-secondary); margin-bottom:26px; }
+
+  .strength-bar{ display:flex; gap:4px; margin-top:8px; }
+  .strength-bar span{ flex:1; height:3px; border-radius:3px; background:var(--glass-border); transition:background .3s; }
+  .strength-text{ font-size:11px; color:var(--text-tertiary); margin-top:6px; }
+
+  .check-row{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-secondary); margin:4px 0 20px; }
+  .check-row input{ width:14px; height:14px; accent-color:var(--violet); }
+
+  .divider{ display:flex; align-items:center; gap:12px; margin:22px 0; color:var(--text-tertiary); font-size:11.5px; }
+  .divider::before, .divider::after{ content:''; flex:1; height:1px; background:var(--glass-border); }
+
+  .social-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .social-btn{ aspect-ratio:1; border-radius:12px; background:var(--glass-fill); border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:center; transition:background .25s, border-color .25s, transform .25s; }
+  .social-btn:hover{ background:var(--glass-fill-strong); border-color:var(--glass-border-strong); transform:translateY(-2px); }
+  .social-btn svg{ width:17px; height:17px; }
+
+  .switch-line{ text-align:center; font-size:13px; color:var(--text-secondary); margin-top:24px; }
+  .switch-line a{ color:var(--violet); font-weight:600; }
+
+  /* view panels */
+  .view{ display:none; }
+  .view.active{ display:block; animation:fadeUp .5s var(--ease-out) both; }
+
+  /* OTP view */
+  .otp-row{ display:flex; gap:10px; justify-content:center; margin:26px 0; }
+  .otp-row input{
+    width:46px; height:56px; text-align:center; font-size:20px; font-family:var(--font-mono); font-weight:600;
+    background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:12px; color:var(--text-primary);
+  }
+  .otp-row input:focus{ outline:none; border-color:var(--violet-soft); background:rgba(124,111,255,0.06); }
+
+  .biometric-row{ display:flex; justify-content:center; gap:28px; margin:30px 0 10px; }
+  .biometric-opt{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .biometric-icon{
+    width:64px; height:64px; border-radius:20px; display:flex; align-items:center; justify-content:center;
+    background:var(--glass-fill); border:1px solid var(--glass-border); position:relative; overflow:hidden;
+  }
+  .biometric-icon svg{ width:28px; height:28px; stroke:var(--text-primary); }
+  .biometric-icon.scanning::after{
+    content:''; position:absolute; left:0; right:0; height:2px; top:0;
+    background:linear-gradient(90deg,transparent,var(--teal),transparent);
+    animation:scan 1.6s linear infinite;
+  }
+  @keyframes scan{ 0%{ top:0; } 100%{ top:100%; } }
+  .biometric-opt span{ font-size:11.5px; color:var(--text-secondary); }
+
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-secondary); margin-bottom:20px; }
+  .back-link svg{ width:14px; height:14px; }
+
+  @media (max-width:900px){ .brand-panel{ display:none; } }
+</style>
+</head>
+<body>
+  <canvas id="aurora-canvas"></canvas>
+  <div class="noise"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <div class="brand-panel">
+    <div class="brand-top"><span class="brand-mark"></span>ExpensePro</div>
+    <div class="brand-mid">
+      <h1>Money, understood the moment it moves.</h1>
+      <p>Sign in to see every transaction categorized, every budget tracked, and every dollar accounted for — automatically.</p>
+      <div class="float-card">
+        <div class="lbl">Net worth</div>
+        <div class="val mono">$128,402.17</div>
+        <div class="delta">+2.4% this week</div>
+      </div>
+    </div>
+    <div class="brand-bottom">© 2026 ExpensePro. All rights reserved.</div>
+  </div>
+
+  <div class="auth-panel">
+    <div class="auth-box">
+
+      <!-- LOGIN / REGISTER -->
+      <div id="view-main" class="view active">
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">Sign in</button>
+          <button class="auth-tab" data-tab="register">Create account</button>
+        </div>
+
+        <div id="tab-login">
+          <div class="auth-title">Welcome back</div>
+          <div class="auth-sub">Sign in to your ExpensePro account</div>
+          <form id="login-form">
+            <div class="field"><label>Email</label><input type="email" placeholder="you@company.com" required></div>
+            <div class="field"><label>Password</label><input type="password" placeholder="••••••••" required></div>
+            <div class="check-row" style="justify-content:space-between;">
+              <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox"> Remember this device</label>
+              <a href="#" id="forgot-link" style="color:var(--violet); font-weight:600;">Forgot?</a>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+          </form>
+          <div class="divider">or continue with</div>
+          <div class="social-row" id="social-login"></div>
+        </div>
+
+        <div id="tab-register" style="display:none;">
+          <div class="auth-title">Create your account</div>
+          <div class="auth-sub">Free to start — no card required</div>
+          <form id="register-form">
+            <div class="field"><label>Full name</label><input type="text" placeholder="Alex Morgan" required></div>
+            <div class="field"><label>Email</label><input type="email" placeholder="you@company.com" required></div>
+            <div class="field">
+              <label>Password</label>
+              <input type="password" id="reg-password" placeholder="Create a password" required>
+              <div class="strength-bar"><span></span><span></span><span></span><span></span></div>
+              <div class="strength-text" id="strength-text">Use 8+ characters with a mix of letters &amp; numbers</div>
+            </div>
+            <label class="check-row"><input type="checkbox" required> I agree to the Terms &amp; Privacy Policy</label>
+            <button type="submit" class="btn btn-primary btn-block">Create account</button>
+          </form>
+        </div>
+
+        <div class="switch-line" id="switch-line">New here? <a href="#" data-switch="register">Create an account</a></div>
+      </div>
+
+      <!-- OTP VIEW -->
+      <div id="view-otp" class="view">
+        <a href="#" class="back-link" data-back="main"><svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</a>
+        <div class="auth-title">Verify it's you</div>
+        <div class="auth-sub">Enter the 6-digit code sent to your email</div>
+        <div class="otp-row">
+          <input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric">
+          <input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric">
+        </div>
+        <button class="btn btn-primary btn-block" id="otp-submit">Verify &amp; continue</button>
+        <div class="switch-line">Didn't get a code? <a href="#">Resend</a></div>
+
+        <div class="divider">or use biometrics</div>
+        <div class="biometric-row">
+          <div class="biometric-opt" id="face-id-opt">
+            <div class="biometric-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 00-2 2v3M15 4h3a2 2 0 012 2v3M9 20H6a2 2 0 01-2-2v-3M15 20h3a2 2 0 002-2v-3M9 9v.01M15 9v.01M9 15c.5 1 1.5 1.5 3 1.5s2.5-.5 3-1.5"/></svg></div>
+            <span>Face ID</span>
+          </div>
+          <div class="biometric-opt" id="fingerprint-opt">
+            <div class="biometric-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 3 1 5 2 7M12 6a5 5 0 00-5 5c0 2.5.8 4 1.8 5.7M12 10a3 3 0 00-3 3c0 2 .6 3.3 1.5 4.7M12 10a3 3 0 013 3c0 3-1 5.5-2 7"/></svg></div>
+            <span>Fingerprint</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORGOT PASSWORD VIEW -->
+      <div id="view-forgot" class="view">
+        <a href="#" class="back-link" data-back="main"><svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to sign in</a>
+        <div class="auth-title">Reset your password</div>
+        <div class="auth-sub">We'll email you a link to get back in</div>
+        <div class="field"><label>Email</label><input type="email" placeholder="you@company.com"></div>
+        <button class="btn btn-primary btn-block" id="reset-submit">Send reset link</button>
+      </div>
+
+    </div>
+  </div>
+
+<script src="assets/js/base.js"></script>
+<script>
+(function(){
+  var mainView = document.getElementById('view-main');
+  var otpView = document.getElementById('view-otp');
+  var forgotView = document.getElementById('view-forgot');
+  function show(view){
+    [mainView, otpView, forgotView].forEach(function(v){ v.classList.remove('active'); });
+    view.classList.add('active');
+  }
+
+  document.querySelectorAll('.auth-tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.auth-tab').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      var isLogin = tab.dataset.tab === 'login';
+      document.getElementById('tab-login').style.display = isLogin?'block':'none';
+      document.getElementById('tab-register').style.display = isLogin?'none':'block';
+      document.getElementById('switch-line').innerHTML = isLogin
+        ? 'New here? <a href="#" data-switch="register">Create an account</a>'
+        : 'Already have an account? <a href="#" data-switch="login">Sign in</a>';
+    });
+  });
+
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-switch]');
+    if(t){ e.preventDefault(); document.querySelector('.auth-tab[data-tab="'+t.dataset.switch+'"]').click(); }
+    var b = e.target.closest('[data-back]');
+    if(b){ e.preventDefault(); show(mainView); }
+  });
+
+  document.getElementById('forgot-link').addEventListener('click', function(e){ e.preventDefault(); show(forgotView); });
+
+  document.getElementById('login-form').addEventListener('submit', function(e){
+    e.preventDefault(); show(otpView);
+  });
+  document.getElementById('register-form').addEventListener('submit', function(e){
+    e.preventDefault(); show(otpView);
+  });
+  document.getElementById('reset-submit').addEventListener('click', function(){
+    this.textContent = 'Link sent ✓'; this.disabled = true;
+  });
+  document.getElementById('otp-submit').addEventListener('click', function(){
+    this.textContent = 'Redirecting…';
+    setTimeout(function(){ window.location.href = 'dashboard.html'; }, 700);
+  });
+
+  // OTP auto-advance
+  var otpInputs = document.querySelectorAll('.otp-row input');
+  otpInputs.forEach(function(inp, i){
+    inp.addEventListener('input', function(){
+      if(inp.value && otpInputs[i+1]) otpInputs[i+1].focus();
+    });
+    inp.addEventListener('keydown', function(e){
+      if(e.key==='Backspace' && !inp.value && otpInputs[i-1]) otpInputs[i-1].focus();
+    });
+  });
+
+  // biometric mock scan
+  [['face-id-opt'],['fingerprint-opt']].forEach(function(pair){
+    var el = document.getElementById(pair[0]);
+    el.addEventListener('click', function(){
+      var icon = el.querySelector('.biometric-icon');
+      icon.classList.add('scanning');
+      setTimeout(function(){
+        icon.classList.remove('scanning');
+        document.getElementById('otp-submit').click();
+      }, 1200);
+    });
+  });
+
+  // password strength meter
+  var pw = document.getElementById('reg-password');
+  var bars = document.querySelectorAll('.strength-bar span');
+  var strengthText = document.getElementById('strength-text');
+  var labels = ['Too weak', 'Weak', 'Good', 'Strong'];
+  var colors = ['var(--danger)','var(--warning)','var(--teal)','var(--success)'];
+  pw.addEventListener('input', function(){
+    var v = pw.value;
+    var score = 0;
+    if(v.length>=8) score++;
+    if(/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+    if(/[0-9]/.test(v)) score++;
+    if(/[^A-Za-z0-9]/.test(v)) score++;
+    bars.forEach(function(b,i){ b.style.background = i<score ? colors[Math.max(score-1,0)] : 'var(--glass-border)'; });
+    strengthText.textContent = v.length===0 ? 'Use 8+ characters with a mix of letters & numbers' : labels[Math.max(score-1,0)];
+  });
+
+  // social login icons
+  var socials = [
+    {name:'Google', path:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/>'},
+    {name:'GitHub', path:'<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 00-1.3-3.2 4.2 4.2 0 00-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 00-6.2 0C6.5 3.3 5.4 3.6 5.4 3.6a4.2 4.2 0 00-.1 3.2A4.6 4.6 0 004 10c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V19"/>'},
+    {name:'Microsoft', path:'<rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/>'},
+    {name:'Apple', path:'<path d="M16 3c0 1.5-1.5 3-3 3s-1-1.5 0-3 3-1.5 3 0zM7 8c2 0 3 1 5 1s3-1 5-1 3 3 3 6-3 8-5 8-2-1-3-1-1 1-3 1-5-5-5-8 2-6 3-6z"/>'}
+  ];
+  document.getElementById('social-login').innerHTML = socials.map(function(s){
+    return '<button class="social-btn" type="button" title="Continue with '+s.name+'"><svg class="icon" viewBox="0 0 24 24">'+s.path+'</svg></button>';
+  }).join('');
+
+  window.EP_bindCursorHover(document);
+})();
+</script>
+</body>
+</html>

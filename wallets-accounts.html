@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ExpensePro — Wallets &amp; Accounts</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  .acc-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:16px; }
+  .link-card{ border-radius:18px; padding:20px 24px; background:var(--glass-fill); border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; gap:16px; flex-wrap:wrap; }
+  .link-left{ display:flex; align-items:center; gap:14px; }
+  .link-icon{ width:42px; height:42px; border-radius:12px; background:var(--glass-fill-strong); border:1px dashed var(--glass-border-strong); display:flex; align-items:center; justify-content:center; }
+  .link-title{ font-size:14px; font-weight:600; }
+  .link-sub{ font-size:12px; color:var(--text-tertiary); margin-top:2px; }
+  .panel{ border-radius:18px; padding:22px; background:var(--glass-fill); border:1px solid var(--glass-border); overflow-x:auto; }
+  @media (max-width:1000px){ .acc-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:640px){ .acc-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body class="app">
+  <canvas id="aurora-canvas"></canvas>
+  <div class="noise"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <aside id="sidebar" class="glass"></aside>
+
+  <main id="main">
+    <div id="topbar"></div>
+
+    <div class="acc-grid" id="acc-grid"></div>
+
+    <div class="link-card fade-in">
+      <div class="link-left">
+        <span class="link-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+        <div><div class="link-title">Link a new account</div><div class="link-sub">Securely connect any bank, card, or wallet</div></div>
+      </div>
+      <a href="#" class="btn btn-primary">Connect</a>
+    </div>
+
+    <div class="panel fade-in">
+      <div style="font-family:var(--font-display); font-weight:700; font-size:15px; margin-bottom:16px;">All linked accounts</div>
+      <table class="data-table">
+        <thead><tr><th>Account</th><th>Type</th><th>Number</th><th style="text-align:right;">Balance</th></tr></thead>
+        <tbody id="acc-rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+<script src="assets/js/base.js"></script>
+<script>
+(function(){
+  EP_renderShell('wallets', 'Wallets & Accounts', 'Every linked bank, card, and wallet.');
+
+  var accounts = [
+    {prov:'First National · Checking', label:'Balance', amt:12480.50, last:'4821', kind:'checking'},
+    {prov:'Horizon Bank · Savings', label:'Balance', amt:28900.00, last:'7734', kind:'savings'},
+    {prov:'ExpensePro Card · Credit', label:'Outstanding', amt:642.18, last:'2210', kind:'credit'}
+  ];
+  document.getElementById('acc-grid').innerHTML = accounts.map(function(a){
+    return '<div class="account-card glass fade-in"><div class="prov">'+a.prov+'</div>'
+      + '<div class="lbl">'+a.label+'</div><div class="amt mono">$'+a.amt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
+      + '<div class="foot"><span>•••• '+a.last+'</span><span class="wordmark">expensepro</span></div></div>';
+  }).join('');
+
+  var rows = [
+    {name:'First National', type:'Checking', num:'4821', bal:12480.50},
+    {name:'Horizon Bank', type:'Savings', num:'7734', bal:28900.00},
+    {name:'ExpensePro Card', type:'Credit', num:'2210', bal:642.18},
+    {name:'Coinbase', type:'Crypto wallet', num:'0x9f2…c4', bal:6210.00}
+  ];
+  document.getElementById('acc-rows').innerHTML = rows.map(function(r){
+    return '<tr><td style="font-weight:600;">'+r.name+'</td><td>'+r.type+'</td><td class="mono" style="color:var(--text-secondary);">•••• '+r.num+'</td>'
+      + '<td style="text-align:right;" class="mono">$'+r.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
+  }).join('');
+
+  window.EP_bindCursorHover(document);
+})();
+</script>
+</body>
+</html>

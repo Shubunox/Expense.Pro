@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ExpensePro — Bills &amp; Subscriptions</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  .sub-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .scard{ border-radius:18px; padding:22px; background:var(--glass-fill); border:1px solid var(--glass-border); }
+  .scard-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; }
+  .scard-icon{ width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; background:var(--glass-fill-strong); border:1px solid var(--glass-border); font-size:17px; }
+  .scard-name{ font-family:var(--font-display); font-weight:700; font-size:15px; margin-top:14px; }
+  .scard-sub{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; }
+  .scard-foot{ display:flex; justify-content:space-between; align-items:center; margin-top:18px; }
+  .scard-price{ font-family:var(--font-mono); font-size:18px; font-weight:600; }
+  @media (max-width:1000px){ .sub-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:640px){ .sub-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body class="app">
+  <canvas id="aurora-canvas"></canvas>
+  <div class="noise"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
+
+  <aside id="sidebar" class="glass"></aside>
+
+  <main id="main">
+    <div id="topbar"></div>
+
+    <div class="mini-stat-grid">
+      <div class="mini-stat fade-in"><div class="lbl">Monthly recurring</div><div class="val mono" id="stat-recurring">$0</div></div>
+      <div class="mini-stat fade-in" style="animation-delay:.05s"><div class="lbl">Active subscriptions</div><div class="val mono" id="stat-active">0</div></div>
+      <div class="mini-stat fade-in" style="animation-delay:.1s"><div class="lbl">Next due</div><div class="val" style="font-size:18px; font-family:var(--font-display); font-weight:700;">Netflix · Aug 22</div></div>
+    </div>
+
+    <div class="sub-grid" id="sub-grid"></div>
+  </main>
+
+<script src="assets/js/base.js"></script>
+<script>
+(function(){
+  EP_renderShell('bills', 'Bills & Subscriptions', 'Recurring charges, all in one place.');
+
+  var subs = [
+    {icon:'🎬', name:'Netflix', renews:'Renews Aug 22', price:15.49, cycle:'Monthly', on:true},
+    {icon:'🎵', name:'Spotify Premium', renews:'Renews Aug 25', price:11.99, cycle:'Monthly', on:true},
+    {icon:'⚡', name:'City Power & Light', renews:'Renews Aug 28', price:96.40, cycle:'Monthly', on:true},
+    {icon:'📦', name:'Amazon Prime', renews:'Renews Sep 02', price:139.00, cycle:'Yearly', on:true},
+    {icon:'📶', name:'Comcast Internet', renews:'Renews Sep 05', price:79.99, cycle:'Monthly', on:true},
+    {icon:'🏋️', name:'Gym Membership', renews:'Renews Sep 08', price:45.00, cycle:'Monthly', on:false}
+  ];
+
+  var recurring = subs.filter(function(s){return s.on && s.cycle==='Monthly';}).reduce(function(s,x){return s+x.price;},0);
+  EP_countTo(document.getElementById('stat-recurring'), recurring, {prefix:'$', duration:1000, decimals:2});
+  EP_countTo(document.getElementById('stat-active'), subs.filter(function(s){return s.on;}).length, {duration:800});
+
+  document.getElementById('sub-grid').innerHTML = subs.map(function(s,i){
+    return '<div class="scard fade-in"><div class="scard-head"><span class="scard-icon">'+s.icon+'</span><span class="badge badge-violet">'+s.cycle+'</span></div>'
+      + '<div class="scard-name">'+s.name+'</div><div class="scard-sub">'+s.renews+'</div>'
+      + '<div class="scard-foot"><span class="scard-price mono">$'+s.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'
+      + '<button class="toggle'+(s.on?' on':'')+'" data-i="'+i+'"><span class="toggle-knob"></span></button></div></div>';
+  }).join('');
+
+  document.getElementById('sub-grid').addEventListener('click', function(e){
+    var t = e.target.closest('.toggle'); if(!t) return;
+    t.classList.toggle('on');
+  });
+
+  window.EP_bindCursorHover(document);
+})();
+</script>
+</body>
+</html>
